@@ -1,5 +1,7 @@
 package com.vipul.ecommerce.controller;
 
+import com.vipul.ecommerce.dto.LoginRequest;
+import com.vipul.ecommerce.dto.LoginResponse;
 import com.vipul.ecommerce.dto.RegisterRequest;
 import com.vipul.ecommerce.dto.UserResponse;
 import com.vipul.ecommerce.entity.User;
@@ -33,6 +35,12 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @RequestBody LoginRequest request) {
+
+        String token = userService.loginUser(request);
+
+        return ResponseEntity.ok(new LoginResponse(token));
+    }
 }

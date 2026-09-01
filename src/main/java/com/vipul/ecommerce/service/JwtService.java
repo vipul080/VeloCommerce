@@ -11,19 +11,17 @@ import java.util.Date;
 
 @Service
 public class JwtService {
-
     @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration}")
     private long expiration;
 
-    private SecretKey getSigningKey() {
+    public SecretKey getSigningKey(){
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email, String role) {
-
+    public String generateTokens(String email, String role){
         return Jwts.builder()
                 .subject(email)
                 .claim("role", role)

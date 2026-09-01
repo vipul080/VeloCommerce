@@ -16,13 +16,21 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    public SecurityFilterChain securityFilterChain(HttpSecurity http){
-        http.csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("api/users/register")
-                        .permitAll().anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/users/register",
+                                "/api/users/login"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
+
         return http.build();
     }
 }
-
