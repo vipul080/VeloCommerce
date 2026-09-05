@@ -7,6 +7,7 @@ import com.vipul.ecommerce.dto.UserResponse;
 import com.vipul.ecommerce.entity.User;
 import com.vipul.ecommerce.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -42,5 +43,20 @@ public class UserController {
         String token = userService.loginUser(request);
 
         return ResponseEntity.ok(new LoginResponse(token));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();
+
+        UserResponse response = new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole()
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
