@@ -7,6 +7,7 @@ import com.vipul.ecommerce.dto.UserResponse;
 import com.vipul.ecommerce.entity.User;
 import com.vipul.ecommerce.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -58,5 +59,11 @@ public class UserController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/admin-test")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> adminTest() {
+        return ResponseEntity.ok("You are an ADMIN");
     }
 }
