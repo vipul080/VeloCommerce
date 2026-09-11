@@ -3,11 +3,13 @@ package com.vipul.ecommerce.service;
 import com.vipul.ecommerce.dto.ProductRequest;
 import com.vipul.ecommerce.dto.ProductResponse;
 import com.vipul.ecommerce.entity.Product;
+import com.vipul.ecommerce.exception.ProductNotFoundException;
 import com.vipul.ecommerce.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class ProductService {
@@ -43,5 +45,74 @@ public class ProductService {
                 savedProduct.getCreatedAt(),
                 savedProduct.getUpdatedAt()
         );
+    }
+
+    public List<ProductResponse> getAllProducts() {
+
+        List<Product> products = productRepository.findAll();
+
+        return products.stream()
+                .map(product -> new ProductResponse(
+                        product.getId(),
+                        product.getName(),
+                        product.getDescription(),
+                        product.getPrice(),
+                        product.getStock(),
+                        product.getCategory(),
+                        product.getCreatedAt(),
+                        product.getUpdatedAt()
+                ))
+                .toList();
+    }
+
+    public ProductResponse getProductById(Long id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+
+        return new ProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStock(),
+                product.getCategory(),
+                product.getCreatedAt(),
+                product.getUpdatedAt()
+        );
+    }
+
+    public ProductResponse updateProduct(Long id, ProductRequest request) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setStock(request.getStock());
+        product.setCategory(request.getCategory());
+        product.setUpdatedAt(LocalDateTime.now());
+
+        Product updatedProduct = productRepository.save(product);
+
+        return new ProductResponse(
+                updatedProduct.getId(),
+                updatedProduct.getName(),
+                updatedProduct.getDescription(),
+                updatedProduct.getPrice(),
+                updatedProduct.getStock(),
+                updatedProduct.getCategory(),
+                updatedProduct.getCreatedAt(),
+                updatedProduct.getUpdatedAt()
+        );
+    }
+
+    public void deleteProduct(Long id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+
+        productRepository.delete(product);
     }
 }

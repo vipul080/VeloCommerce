@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
@@ -26,5 +28,40 @@ public class ProductController {
         ProductResponse response = productService.createProduct(request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+
+        List<ProductResponse> products = productService.getAllProducts();
+
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
+
+        ProductResponse product = productService.getProductById(id);
+
+        return ResponseEntity.ok(product);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductResponse> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductRequest request) {
+
+        ProductResponse response = productService.updateProduct(id, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProduct(@PathVariable long id){
+        productService.deleteProduct(id);
+
+        return ResponseEntity.noContent().build();
     }
 }
