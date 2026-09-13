@@ -7,6 +7,10 @@ import com.vipul.ecommerce.entity.Cart;
 import com.vipul.ecommerce.entity.CartItem;
 import com.vipul.ecommerce.entity.Product;
 import com.vipul.ecommerce.entity.User;
+import com.vipul.ecommerce.exception.CartItemNotFoundException;
+import com.vipul.ecommerce.exception.CartNotFoundException;
+import com.vipul.ecommerce.exception.ProductNotFoundException;
+import com.vipul.ecommerce.exception.UserNotFoundException;
 import com.vipul.ecommerce.repository.CartItemRepository;
 import com.vipul.ecommerce.repository.CartRepository;
 import com.vipul.ecommerce.repository.ProductRepository;
@@ -118,5 +122,61 @@ public class CartService {
                 items,
                 total
         );
+    }
+
+    public CartResponse updateCartItem(
+            String email,
+            Long productId,
+            Integer quantity) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        Cart cart = cartRepository.findByUser(user)
+                .orElseThrow(() ->
+                        new RuntimeException("Cart not found"));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() ->
+                        new RuntimeException("Product not found"));
+
+        CartItem cartItem = cartItemRepository
+                .findByCartAndProduct(cart, product)
+                .orElseThrow(() ->
+                        new RuntimeException("Product not found in cart"));
+
+        cartItem.setQuantity(quantity);
+
+        cartItemRepository.save(cartItem);
+
+        return getCart(email);
+    }
+
+
+    public CartResponse removeFromCart(
+            String email,
+            Long productId) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
+
+        Cart cart = cartRepository.findByUser(user)
+                .orElseThrow(() ->
+                        new CartNotFoundException("Cart not found"));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() ->
+                        new ProductNotFoundException("Product not found"));
+
+        CartItem cartItem = cartItemRepository
+                .findByCartAndProduct(cart, product)
+                .orElseThrow(() ->
+                        new CartItemNotFoundException("Product not found in cart"));
+
+        cartItemRepository.delete(cartItem);
+
+        return getCart(email);
     }
 }

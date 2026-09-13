@@ -45,4 +45,36 @@ public class CartController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/items/{productId}")
+    public ResponseEntity<CartResponse> updateCartItem(
+            Authentication authentication,
+            @PathVariable Long productId,
+            @RequestParam Integer quantity) {
+
+        User user = (User) authentication.getPrincipal();
+
+        CartResponse response = cartService.updateCartItem(
+                user.getEmail(),
+                productId,
+                quantity
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/items/{productId}")
+    public ResponseEntity<CartResponse> removeFromCart(
+            Authentication authentication,
+            @PathVariable Long productId) {
+
+        User user = (User) authentication.getPrincipal();
+
+        CartResponse response = cartService.removeFromCart(
+                user.getEmail(),
+                productId
+        );
+
+        return ResponseEntity.ok(response);
+    }
 }
