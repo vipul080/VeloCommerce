@@ -1,28 +1,26 @@
 package com.vipul.ecommerce.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Table(name = "cart_items")
-public class CartItem {
+@Table(name = "order_items")
+public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "cart_id", nullable = false)
-    private Cart cart;
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
@@ -31,9 +29,13 @@ public class CartItem {
     @Column(nullable = false)
     private Integer quantity;
 
-    public CartItem(Cart cart, Product product, @NotNull @Positive Integer quantity) {
-        this.cart = cart;
+    @Column(nullable = false)
+    private BigDecimal price;
+
+    public OrderItem(Order savedOrder, Product product, Integer quantity, BigDecimal price) {
+        this.order = savedOrder;
         this.product = product;
         this.quantity = quantity;
+        this.price = price;
     }
 }

@@ -1,24 +1,23 @@
 package com.vipul.ecommerce.dto;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CartItemRequest {
+public class OrderItemResponse {
 
-    @NotNull
     private Long productId;
-
-    @NotNull
-    @Positive
+    private String productName;
     private Integer quantity;
+    private BigDecimal price;
+    private BigDecimal subtotal;
 
 }
