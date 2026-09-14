@@ -1,0 +1,163 @@
+package com.vipul.ecommerce.service;
+
+import com.vipul.ecommerce.dto.ProductRequest;
+import static org.mockito.ArgumentMatchers.any;
+import com.vipul.ecommerce.entity.Product;
+import com.vipul.ecommerce.exception.ProductNotFoundException;
+import com.vipul.ecommerce.repository.ProductRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.verify;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.math.BigDecimal;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ProductServiceTest {
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @InjectMocks
+    private ProductService productService;
+
+    @Test
+    void getProductById_shouldReturnProduct_whenProductExists() {
+
+        Product product = new Product(
+                "Mechanical Keyboard",
+                "RGB mechanical keyboard",
+                new BigDecimal("2999.99"),
+                22,
+                "Electronics",
+                null,
+                null
+        );
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+
+        var result = productService.getProductById(1L);
+
+        assertEquals("Mechanical Keyboard", result.getName());
+        assertEquals(new BigDecimal("2999.99"), result.getPrice());
+        assertEquals(22, result.getStock());
+
+        verify(productRepository).findById(1L);
+    }
+
+    @Test
+    void getProductById_shouldThrowException_whenProductDoesNotExist() {
+
+        when(productRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ProductNotFoundException.class,
+                () -> productService.getProductById(999L)
+        );
+
+        verify(productRepository).findById(999L);
+    }
+    @Test
+    void createProduct_shouldSaveAndReturnProduct() {
+
+        ProductRequest request = new ProductRequest(
+                "Wireless Mouse",
+                "Ergonomic wireless mouse",
+                new BigDecimal("1499.99"),
+                50,
+                "Electronics"
+        );
+
+        Product savedProduct = new Product(
+                "Wireless Mouse",
+                "Ergonomic wireless mouse",
+                new BigDecimal("1499.99"),
+                50,
+                "Electronics",
+                null,
+                null
+        );
+
+        when(productRepository.save(any(Product.class)))
+                .thenReturn(savedProduct);
+
+        var result = productService.createProduct(request);
+
+        assertEquals("Wireless Mouse", result.getName());
+        assertEquals(new BigDecimal("1499.99"), result.getPrice());
+        assertEquals(50, result.getStock());
+
+        verify(productRepository).save(any(Product.class));
+    }
+
+    @Test
+    void updateProduct_shouldUpdateAndReturnProduct_whenProductExists() {
+
+        ProductRequest request = new ProductRequest(
+                "Updated Keyboard",
+                "Updated description",
+                new BigDecimal("3499.99"),
+                30,
+                "Gaming"
+        );
+
+        Product product = new Product(
+                "Mechanical Keyboard",
+                "Old description",
+                new BigDecimal("2999.99"),
+                22,
+                "Electronics",
+                null,
+                null
+        );
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+
+        when(productRepository.save(product))
+                .thenReturn(product);
+
+        var result = productService.updateProduct(1L, request);
+
+        assertEquals("Updated Keyboard", result.getName());
+        assertEquals("Updated description", result.getDescription());
+        assertEquals(new BigDecimal("3499.99"), result.getPrice());
+        assertEquals(30, result.getStock());
+        assertEquals("Gaming", result.getCategory());
+
+        verify(productRepository).findById(1L);
+        verify(productRepository).save(product);
+    }
+
+    @Test
+    void updateProduct_shouldThrowException_whenProductDoesNotExist() {
+
+        ProductRequest request = new ProductRequest(
+                "Updated Keyboard",
+                "Updated description",
+                new BigDecimal("3499.99"),
+                30,
+                "Gaming"
+        );
+
+        when(productRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ProductNotFoundException.class,
+                () -> productService.updateProduct(999L, request)
+        );
+
+        verify(productRepository).findById(999L);
+    }
+};

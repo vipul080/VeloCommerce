@@ -36,4 +36,13 @@ public class Product {
 
     private LocalDateTime updatedAt;
 
+    public Product(String name, String description, BigDecimal price, int stock, String category, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.stock = stock;
+        this.category = category;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 }
