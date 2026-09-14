@@ -7,6 +7,7 @@ import com.vipul.ecommerce.exception.CartNotFoundException;
 import com.vipul.ecommerce.exception.UserNotFoundException;
 import com.vipul.ecommerce.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -77,6 +78,7 @@ public class OrderService {
         );
     }
 
+    @Transactional
     public OrderResponse placeOrder(String email) {
 
         User user = userRepository.findByEmail(email)
@@ -152,9 +154,8 @@ public class OrderService {
         cart.getItems().clear();
         cartRepository.save(cart);
 
+        //throw new RuntimeException("Testing transaction rollback");
 
         return convertToResponse(savedOrder);
     }
-
-
 }
