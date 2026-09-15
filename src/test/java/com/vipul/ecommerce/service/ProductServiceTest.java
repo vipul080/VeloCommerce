@@ -10,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.mockito.Mockito.verify;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -18,7 +17,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -160,4 +159,33 @@ class ProductServiceTest {
 
         verify(productRepository).findById(999L);
     }
-};
+
+    @Test
+    void deleteProduct_shouldDeleteProduct_whenProductExists() {
+
+        Product product = new Product();
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+
+        productService.deleteProduct(1L);
+
+        verify(productRepository).findById(1L);
+        verify(productRepository).delete(product);
+    }
+
+    @Test
+    void deleteProduct_shouldThrowException_whenProductDoesNotExist() {
+
+        when(productRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ProductNotFoundException.class,
+                () -> productService.deleteProduct(999L)
+        );
+
+        verify(productRepository).findById(999L);
+        verify(productRepository, never()).delete(any(Product.class));
+    }
+}
