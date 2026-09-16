@@ -149,6 +149,7 @@ public class OrderService {
             );
 
             orderItemRepository.save(orderItem);
+            savedOrder.getItems().add(orderItem);
         }
 
         cart.getItems().clear();

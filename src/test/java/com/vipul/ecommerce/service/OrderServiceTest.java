@@ -389,4 +389,77 @@ class OrderServiceTest {
 
         verify(cartRepository).save(cart);
     }
+
+    @Test
+    void placeOrder_shouldReturnOrderWithItems() {
+
+        User user = new User(
+                "Vipul",
+                "vipul@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+
+        Product product = new Product(
+                "Mechanical Keyboard",
+                "RGB mechanical keyboard",
+                new BigDecimal("2999.99"),
+                10,
+                "Electronics",
+                null,
+                null
+        );
+
+        Cart cart = new Cart(user);
+
+        CartItem cartItem = new CartItem(
+                cart,
+                product,
+                2
+        );
+
+        cart.getItems().add(cartItem);
+
+        when(userRepository.findByEmail("vipul@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(cartRepository.findByUser(user))
+                .thenReturn(Optional.of(cart));
+
+        when(orderRepository.save(any(Order.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(orderItemRepository.save(any(OrderItem.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrderResponse response =
+                orderService.placeOrder("vipul@example.com");
+
+        assertEquals(1, response.getItems().size());
+
+        assertEquals(
+                product.getId(),
+                response.getItems().get(0).getProductId()
+        );
+
+        assertEquals(
+                "Mechanical Keyboard",
+                response.getItems().get(0).getProductName()
+        );
+
+        assertEquals(
+                2,
+                response.getItems().get(0).getQuantity()
+        );
+
+        assertEquals(
+                new BigDecimal("2999.99"),
+                response.getItems().get(0).getPrice()
+        );
+
+        assertEquals(
+                new BigDecimal("5999.98"),
+                response.getItems().get(0).getSubtotal()
+        );
+    }
 }
