@@ -12,7 +12,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -221,5 +223,170 @@ class OrderServiceTest {
 
         verify(orderRepository, never()).save(any(Order.class));
         verify(orderItemRepository, never()).save(any(OrderItem.class));
+    }
+
+    @Test
+    void getMyOrders_shouldReturnOrders_whenUserExists() {
+
+        User user = new User(
+                "Vipul",
+                "vipul@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+
+        Order order = new Order(
+                user,
+                OrderStatus.CONFIRMED,
+                new BigDecimal("5999.98"),
+                LocalDateTime.now()
+        );
+
+        when(userRepository.findByEmail("vipul@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(orderRepository.findByUser(user))
+                .thenReturn(List.of(order));
+
+        List<OrderResponse> response =
+                orderService.getMyOrders("vipul@example.com");
+
+        assertEquals(1, response.size());
+
+        assertEquals(
+                OrderStatus.CONFIRMED,
+                response.get(0).getStatus()
+        );
+
+        assertEquals(
+                new BigDecimal("5999.98"),
+                response.get(0).getTotalAmount()
+        );
+
+        verify(userRepository).findByEmail("vipul@example.com");
+        verify(orderRepository).findByUser(user);
+    }
+
+    @Test
+    void getMyOrders_shouldThrowException_whenUserNotFound() {
+
+        when(userRepository.findByEmail("unknown@example.com"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                UserNotFoundException.class,
+                () -> orderService.getMyOrders("unknown@example.com")
+        );
+
+        verify(userRepository).findByEmail("unknown@example.com");
+
+        verify(orderRepository, never()).findByUser(any(User.class));
+    }
+
+    @Test
+    void getMyOrders_shouldReturnMultipleOrders_whenUserHasMultipleOrders() {
+
+        User user = new User(
+                "Vipul",
+                "vipul@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+
+        Order order1 = new Order(
+                user,
+                OrderStatus.CONFIRMED,
+                new BigDecimal("5999.98"),
+                LocalDateTime.now()
+        );
+
+        Order order2 = new Order(
+                user,
+                OrderStatus.SHIPPED,
+                new BigDecimal("2999.99"),
+                LocalDateTime.now()
+        );
+
+        when(userRepository.findByEmail("vipul@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(orderRepository.findByUser(user))
+                .thenReturn(List.of(order1, order2));
+
+        List<OrderResponse> response =
+                orderService.getMyOrders("vipul@example.com");
+
+        assertEquals(2, response.size());
+
+        assertEquals(
+                new BigDecimal("5999.98"),
+                response.get(0).getTotalAmount()
+        );
+
+        assertEquals(
+                new BigDecimal("2999.99"),
+                response.get(1).getTotalAmount()
+        );
+
+        assertEquals(
+                OrderStatus.CONFIRMED,
+                response.get(0).getStatus()
+        );
+
+        assertEquals(
+                OrderStatus.SHIPPED,
+                response.get(1).getStatus()
+        );
+
+        verify(orderRepository).findByUser(user);
+    }
+
+    @Test
+    void placeOrder_shouldClearCart_afterSuccessfulOrder() {
+
+        User user = new User(
+                "Vipul",
+                "vipul@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+
+        Product product = new Product(
+                "Mechanical Keyboard",
+                "RGB mechanical keyboard",
+                new BigDecimal("2999.99"),
+                10,
+                "Electronics",
+                null,
+                null
+        );
+
+        Cart cart = new Cart(user);
+
+        CartItem cartItem = new CartItem(
+                cart,
+                product,
+                2
+        );
+
+        cart.getItems().add(cartItem);
+
+        when(userRepository.findByEmail("vipul@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(cartRepository.findByUser(user))
+                .thenReturn(Optional.of(cart));
+
+        when(orderRepository.save(any(Order.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(orderItemRepository.save(any(OrderItem.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        orderService.placeOrder("vipul@example.com");
+
+        assertTrue(cart.getItems().isEmpty());
+
+        verify(cartRepository).save(cart);
     }
 }

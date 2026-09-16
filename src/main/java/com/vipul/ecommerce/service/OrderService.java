@@ -37,7 +37,7 @@ public class OrderService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new UserNotFoundException("User not found"));
 
         List<Order> orders = orderRepository.findByUser(user);
 
