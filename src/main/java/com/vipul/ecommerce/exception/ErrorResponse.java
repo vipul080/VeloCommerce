@@ -2,6 +2,7 @@ package com.vipul.ecommerce.exception;
 
 import java.time.LocalDateTime;
 
+
 public class ErrorResponse {
 
     private LocalDateTime timestamp;
@@ -17,6 +18,11 @@ public class ErrorResponse {
         this.timestamp = timestamp;
         this.status = status;
         this.error = error;
+        this.message = message;
+    }
+
+    public ErrorResponse(int status, String message) {
+        this.status = status;
         this.message = message;
     }
 

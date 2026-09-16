@@ -2,8 +2,7 @@ package com.vipul.ecommerce.service;
 
 import com.vipul.ecommerce.dto.OrderResponse;
 import com.vipul.ecommerce.entity.*;
-import com.vipul.ecommerce.exception.CartNotFoundException;
-import com.vipul.ecommerce.exception.UserNotFoundException;
+import com.vipul.ecommerce.exception.*;
 import com.vipul.ecommerce.repository.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -461,5 +460,173 @@ class OrderServiceTest {
                 new BigDecimal("5999.98"),
                 response.getItems().get(0).getSubtotal()
         );
+    }
+
+    @Test
+    void cancelOrder_shouldCancelOrderAndRestoreStock() {
+
+        User user = new User(
+                "Vipul",
+                "vipul@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+        user.setId(1L);
+
+        Product product = new Product(
+                "Mechanical Keyboard",
+                "RGB mechanical keyboard",
+                new BigDecimal("2999.99"),
+                22,
+                "Electronics",
+                null,
+                null
+        );
+
+        Order order = new Order(
+                user,
+                OrderStatus.CONFIRMED,
+                new BigDecimal("5999.98"),
+                LocalDateTime.now()
+        );
+
+        OrderItem orderItem = new OrderItem(
+                order,
+                product,
+                2,
+                new BigDecimal("2999.99")
+        );
+
+        order.getItems().add(orderItem);
+
+        when(userRepository.findByEmail("vipul@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        orderService.cancelOrder(1L, "vipul@example.com");
+
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+
+        assertEquals(24, product.getStock());
+
+        verify(orderRepository).findById(1L);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void cancelOrder_shouldThrowException_whenOrderNotFound() {
+
+        User user = new User(
+                "Vipul",
+                "vipul@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+
+        user.setId(1L);
+
+        when(userRepository.findByEmail("vipul@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(orderRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                OrderNotFoundException.class,
+                () -> orderService.cancelOrder(
+                        99L,
+                        "vipul@example.com"
+                )
+        );
+
+        verify(userRepository).findByEmail("vipul@example.com");
+        verify(orderRepository).findById(99L);
+
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void cancelOrder_shouldThrowException_whenOrderBelongsToAnotherUser() {
+
+        User currentUser = new User(
+                "Vipul",
+                "vipul@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+        currentUser.setId(1L);
+
+        User orderOwner = new User(
+                "Other User",
+                "other@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+        orderOwner.setId(2L);
+
+        Order order = new Order(
+                orderOwner,
+                OrderStatus.CONFIRMED,
+                new BigDecimal("2999.99"),
+                LocalDateTime.now()
+        );
+
+        when(userRepository.findByEmail("vipul@example.com"))
+                .thenReturn(Optional.of(currentUser));
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        assertThrows(
+                UnauthorizedOrderException.class,
+                () -> orderService.cancelOrder(
+                        1L,
+                        "vipul@example.com"
+                )
+        );
+
+        verify(orderRepository, never()).save(any(Order.class));
+
+        assertEquals(OrderStatus.CONFIRMED, order.getStatus());
+    }
+
+    @Test
+    void cancelOrder_shouldThrowException_whenOrderIsNotConfirmed() {
+
+        User user = new User(
+                "Vipul",
+                "vipul@example.com",
+                "password",
+                Role.CUSTOMER
+        );
+
+        user.setId(1L);
+
+        Order order = new Order(
+                user,
+                OrderStatus.SHIPPED,
+                new BigDecimal("2999.99"),
+                LocalDateTime.now()
+        );
+
+        when(userRepository.findByEmail("vipul@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        assertThrows(
+                OrderCancellationException.class,
+                () -> orderService.cancelOrder(
+                        1L,
+                        "vipul@example.com"
+                )
+        );
+
+        assertEquals(OrderStatus.SHIPPED, order.getStatus());
+
+        verify(orderRepository, never()).save(any(Order.class));
     }
 }

@@ -3,8 +3,7 @@ package com.vipul.ecommerce.service;
 import com.vipul.ecommerce.dto.OrderItemResponse;
 import com.vipul.ecommerce.dto.OrderResponse;
 import com.vipul.ecommerce.entity.*;
-import com.vipul.ecommerce.exception.CartNotFoundException;
-import com.vipul.ecommerce.exception.UserNotFoundException;
+import com.vipul.ecommerce.exception.*;
 import com.vipul.ecommerce.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -158,5 +157,42 @@ public class OrderService {
         //throw new RuntimeException("Testing transaction rollback");
 
         return convertToResponse(savedOrder);
+    }
+
+    @Transactional
+    public void cancelOrder(Long orderId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new OrderNotFoundException("Order not found"));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedOrderException(
+                    "You cannot cancel this order"
+            );
+        }
+
+        if (order.getStatus() != OrderStatus.CONFIRMED) {
+            throw new OrderCancellationException(
+                    "Order cannot be cancelled"
+            );
+        }
+
+        for (OrderItem orderItem : order.getItems()) {
+
+            Product product = orderItem.getProduct();
+
+            product.setStock(
+                    product.getStock() + orderItem.getQuantity()
+            );
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        orderRepository.save(order);
     }
 }

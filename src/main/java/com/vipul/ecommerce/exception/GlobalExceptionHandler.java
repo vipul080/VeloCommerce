@@ -94,4 +94,40 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(error);
     }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrderNotFound(
+            OrderNotFoundException ex) {
+
+        ErrorResponse error = new ErrorResponse(
+                404,
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(404).body(error);
+    }
+
+    @ExceptionHandler(UnauthorizedOrderException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedOrder(
+            UnauthorizedOrderException ex) {
+
+        ErrorResponse error = new ErrorResponse(
+                403,
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(403).body(error);
+    }
+
+    @ExceptionHandler(OrderCancellationException.class)
+    public ResponseEntity<ErrorResponse> handleOrderCancellation(
+            OrderCancellationException ex) {
+
+        ErrorResponse error = new ErrorResponse(
+                400,
+                ex.getMessage()
+        );
+
+        return ResponseEntity.badRequest().body(error);
+    }
 }
