@@ -130,4 +130,27 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(error);
     }
+
+    @ExceptionHandler(CartEmptyException.class)
+    public ResponseEntity<ErrorResponse> handleCartEmpty(CartEmptyException ex) {
+
+        ErrorResponse error = new ErrorResponse(
+                400,
+                ex.getMessage()
+        );
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientStock(
+            InsufficientStockException ex) {
+
+        ErrorResponse error = new ErrorResponse(
+                400,
+                ex.getMessage()
+        );
+
+        return ResponseEntity.badRequest().body(error);
+    }
 }

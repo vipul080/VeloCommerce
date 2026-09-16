@@ -165,8 +165,9 @@ class OrderServiceTest {
         when(cartRepository.findByUser(user))
                 .thenReturn(Optional.of(cart));
 
+
         assertThrows(
-                RuntimeException.class,
+                CartEmptyException.class,
                 () -> orderService.placeOrder("vipul@example.com")
         );
 
@@ -214,7 +215,7 @@ class OrderServiceTest {
                 .thenReturn(Optional.of(cart));
 
         assertThrows(
-                RuntimeException.class,
+                InsufficientStockException.class,
                 () -> orderService.placeOrder("vipul@example.com")
         );
 

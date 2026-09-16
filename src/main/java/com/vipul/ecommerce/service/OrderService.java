@@ -89,7 +89,7 @@ public class OrderService {
                         new CartNotFoundException("Cart not found"));
 
         if (cart.getItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new CartEmptyException("Cart is empty");
         }
 
         for (CartItem cartItem : cart.getItems()) {
@@ -97,10 +97,8 @@ public class OrderService {
             Product product = cartItem.getProduct();
 
             if (cartItem.getQuantity() > product.getStock()) {
-                throw new RuntimeException(
-                        "Insufficient stock for product: "
-                                + product.getName()
-                );
+                throw new InsufficientStockException(
+                        "Insufficient stock for product: " + product.getName());
             }
         }
 
