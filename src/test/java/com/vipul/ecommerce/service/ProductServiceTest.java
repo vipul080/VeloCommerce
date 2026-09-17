@@ -2,6 +2,8 @@ package com.vipul.ecommerce.service;
 
 import com.vipul.ecommerce.dto.ProductRequest;
 import static org.mockito.ArgumentMatchers.any;
+
+import com.vipul.ecommerce.dto.ProductResponse;
 import com.vipul.ecommerce.entity.Product;
 import com.vipul.ecommerce.exception.ProductNotFoundException;
 import com.vipul.ecommerce.repository.ProductRepository;
@@ -10,10 +12,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -187,5 +194,102 @@ class ProductServiceTest {
 
         verify(productRepository).findById(999L);
         verify(productRepository, never()).delete(any(Product.class));
+    }
+
+    @Test
+    void getAllProductsWithoutCategory() {
+
+        Pageable pageable = PageRequest.of(0, 2);
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Mechanical Keyboard");
+        product.setPrice(new BigDecimal("2999.99"));
+        product.setStock(23);
+        product.setCategory("Electronics");
+
+        Page<Product> productPage =
+                new PageImpl<>(List.of(product), pageable, 1);
+
+        when(productRepository.findAll(pageable))
+                .thenReturn(productPage);
+
+        Page<ProductResponse> result =
+                productService.getAllProducts(null, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getContent().size());
+        assertEquals("Mechanical Keyboard",
+                result.getContent().get(0).getName());
+
+        verify(productRepository).findAll(pageable);
+        verify(productRepository, never())
+                .findByCategory(anyString(), any(Pageable.class));
+    }
+
+    @Test
+    void getAllProductsWithCategory() {
+
+        Pageable pageable = PageRequest.of(0, 2);
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Mechanical Keyboard");
+        product.setPrice(new BigDecimal("2999.99"));
+        product.setStock(23);
+        product.setCategory("Electronics");
+
+        Page<Product> productPage =
+                new PageImpl<>(List.of(product), pageable, 1);
+
+        when(productRepository.findByCategory("Electronics", pageable))
+                .thenReturn(productPage);
+
+        Page<ProductResponse> result =
+                productService.getAllProducts("Electronics", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getContent().size());
+        assertEquals("Mechanical Keyboard",
+                result.getContent().get(0).getName());
+        assertEquals("Electronics",
+                result.getContent().get(0).getCategory());
+
+        verify(productRepository)
+                .findByCategory("Electronics", pageable);
+
+        verify(productRepository, never())
+                .findAll(pageable);
+    }
+
+    @Test
+    void getAllProductsWithBlankCategory() {
+
+        Pageable pageable = PageRequest.of(0, 2);
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Mechanical Keyboard");
+        product.setPrice(new BigDecimal("2999.99"));
+        product.setStock(23);
+        product.setCategory("Electronics");
+
+        Page<Product> productPage =
+                new PageImpl<>(List.of(product), pageable, 1);
+
+        when(productRepository.findAll(pageable))
+                .thenReturn(productPage);
+
+        Page<ProductResponse> result =
+                productService.getAllProducts("   ", pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Mechanical Keyboard",
+                result.getContent().get(0).getName());
+
+        verify(productRepository).findAll(pageable);
+
+        verify(productRepository, never())
+                .findByCategory(anyString(), any(Pageable.class));
     }
 }

@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ProductService {
@@ -47,22 +48,26 @@ public class ProductService {
         );
     }
 
-    public List<ProductResponse> getAllProducts() {
+    public Page<ProductResponse> getAllProducts(String category, Pageable pageable) {
 
-        List<Product> products = productRepository.findAll();
+        Page<Product> products;
 
-        return products.stream()
-                .map(product -> new ProductResponse(
-                        product.getId(),
-                        product.getName(),
-                        product.getDescription(),
-                        product.getPrice(),
-                        product.getStock(),
-                        product.getCategory(),
-                        product.getCreatedAt(),
-                        product.getUpdatedAt()
-                ))
-                .toList();
+        if (category == null || category.isBlank()) {
+            products = productRepository.findAll(pageable);
+        } else {
+            products = productRepository.findByCategory(category, pageable);
+        }
+
+        return products.map(product -> new ProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStock(),
+                product.getCategory(),
+                product.getCreatedAt(),
+                product.getUpdatedAt()
+        ));
     }
 
     public ProductResponse getProductById(Long id) {

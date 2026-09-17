@@ -4,6 +4,8 @@ import com.vipul.ecommerce.dto.ProductRequest;
 import com.vipul.ecommerce.dto.ProductResponse;
 import com.vipul.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,11 +33,12 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(
+            @RequestParam(required = false) String category, Pageable pageable) {
 
-        List<ProductResponse> products = productService.getAllProducts();
-
-        return ResponseEntity.ok(products);
+        return ResponseEntity.ok(
+                productService.getAllProducts(category, pageable)
+        );
     }
 
     @GetMapping("/{id}")
