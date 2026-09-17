@@ -1,5 +1,6 @@
 package com.vipul.ecommerce.service;
 
+import com.vipul.ecommerce.dto.PageResponse;
 import com.vipul.ecommerce.dto.ProductRequest;
 import com.vipul.ecommerce.dto.ProductResponse;
 import com.vipul.ecommerce.entity.Product;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -48,7 +51,9 @@ public class ProductService {
         );
     }
 
-    public Page<ProductResponse> getAllProducts(String category, Pageable pageable) {
+    public PageResponse<ProductResponse> getAllProducts(
+            String category,
+            Pageable pageable) {
 
         Page<Product> products;
 
@@ -58,7 +63,7 @@ public class ProductService {
             products = productRepository.findByCategory(category, pageable);
         }
 
-        return products.map(product -> new ProductResponse(
+        List<ProductResponse> content = products.map(product -> new ProductResponse(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
@@ -67,7 +72,15 @@ public class ProductService {
                 product.getCategory(),
                 product.getCreatedAt(),
                 product.getUpdatedAt()
-        ));
+        )).toList();
+
+        return new PageResponse<>(
+                content,
+                products.getNumber(),
+                products.getSize(),
+                products.getTotalElements(),
+                products.getTotalPages()
+        );
     }
 
     public ProductResponse getProductById(Long id) {

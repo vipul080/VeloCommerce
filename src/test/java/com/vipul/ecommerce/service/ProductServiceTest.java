@@ -1,5 +1,6 @@
 package com.vipul.ecommerce.service;
 
+import com.vipul.ecommerce.dto.PageResponse;
 import com.vipul.ecommerce.dto.ProductRequest;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -214,7 +215,7 @@ class ProductServiceTest {
         when(productRepository.findAll(pageable))
                 .thenReturn(productPage);
 
-        Page<ProductResponse> result =
+        PageResponse<ProductResponse> result =
                 productService.getAllProducts(null, pageable);
 
         assertEquals(1, result.getTotalElements());
@@ -245,7 +246,7 @@ class ProductServiceTest {
         when(productRepository.findByCategory("Electronics", pageable))
                 .thenReturn(productPage);
 
-        Page<ProductResponse> result =
+        PageResponse<ProductResponse> result =
                 productService.getAllProducts("Electronics", pageable);
 
         assertEquals(1, result.getTotalElements());
@@ -280,8 +281,8 @@ class ProductServiceTest {
         when(productRepository.findAll(pageable))
                 .thenReturn(productPage);
 
-        Page<ProductResponse> result =
-                productService.getAllProducts("   ", pageable);
+        PageResponse<ProductResponse> result =
+                productService.getAllProducts(null, pageable);
 
         assertEquals(1, result.getTotalElements());
         assertEquals("Mechanical Keyboard",
@@ -291,5 +292,35 @@ class ProductServiceTest {
 
         verify(productRepository, never())
                 .findByCategory(anyString(), any(Pageable.class));
+    }
+
+    @Test
+    void getAllProductsReturnsCorrectPaginationMetadata() {
+
+        Pageable pageable = PageRequest.of(1, 2);
+
+        Product product = new Product();
+        product.setId(3L);
+        product.setName("USB-C Hub");
+        product.setPrice(new BigDecimal("1899.99"));
+        product.setStock(30);
+        product.setCategory("Electronics");
+
+        Page<Product> productPage =
+                new PageImpl<>(List.of(product), pageable, 5);
+
+        when(productRepository.findAll(pageable))
+                .thenReturn(productPage);
+
+        PageResponse<ProductResponse> result =
+                productService.getAllProducts(null, pageable);
+
+        assertEquals(1, result.getPage());
+        assertEquals(2, result.getSize());
+        assertEquals(5, result.getTotalElements());
+        assertEquals(3, result.getTotalPages());
+        assertEquals(1, result.getContent().size());
+
+        verify(productRepository).findAll(pageable);
     }
 }

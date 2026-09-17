@@ -1,5 +1,6 @@
 package com.vipul.ecommerce.controller;
 
+import com.vipul.ecommerce.dto.PageResponse;
 import com.vipul.ecommerce.dto.ProductRequest;
 import com.vipul.ecommerce.dto.ProductResponse;
 import com.vipul.ecommerce.service.ProductService;
@@ -33,8 +34,9 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> getAllProducts(
-            @RequestParam(required = false) String category, Pageable pageable) {
+    public ResponseEntity<PageResponse<ProductResponse>> getAllProducts(
+            @RequestParam(required = false) String category,
+            Pageable pageable) {
 
         return ResponseEntity.ok(
                 productService.getAllProducts(category, pageable)
