@@ -847,4 +847,49 @@ class OrderServiceTest {
 
         verify(orderRepository).save(order);
     }
+
+    @Test
+    void updateOrderStatusCancellationRestoresStock() {
+
+        User user = new User();
+        user.setId(1L);
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Mechanical Keyboard");
+        product.setStock(21);
+
+        Order order = new Order(
+                user,
+                OrderStatus.CONFIRMED,
+                new BigDecimal("5999.98"),
+                LocalDateTime.now()
+        );
+
+        OrderItem item = new OrderItem(
+                order,
+                product,
+                2,
+                new BigDecimal("2999.99")
+        );
+
+        order.getItems().add(item);
+
+        UpdateOrderStatusRequest request =
+                new UpdateOrderStatusRequest(OrderStatus.CANCELLED);
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        when(orderRepository.save(order))
+                .thenReturn(order);
+
+        OrderResponse result =
+                orderService.updateOrderStatus(1L, request);
+
+        assertEquals(OrderStatus.CANCELLED, result.getStatus());
+        assertEquals(23, product.getStock());
+
+        verify(orderRepository).save(order);
+    }
 }

@@ -181,17 +181,7 @@ public class OrderService {
             );
         }
 
-        for (OrderItem orderItem : order.getItems()) {
-
-            Product product = orderItem.getProduct();
-
-            product.setStock(
-                    product.getStock() + orderItem.getQuantity()
-            );
-        }
-
-        order.setStatus(OrderStatus.CANCELLED);
-
+        cancelOrderAndRestoreStock(order);
         orderRepository.save(order);
     }
 
@@ -234,10 +224,27 @@ public class OrderService {
             );
         }
 
-        order.setStatus(newStatus);
+        if (newStatus == OrderStatus.CANCELLED) {
+            cancelOrderAndRestoreStock(order);
+        } else {
+            order.setStatus(newStatus);
+        }
 
         Order updatedOrder = orderRepository.save(order);
 
         return convertToResponse(updatedOrder);
+    }
+
+    private void cancelOrderAndRestoreStock(Order order) {
+
+        for (OrderItem orderItem : order.getItems()) {
+            Product product = orderItem.getProduct();
+
+            product.setStock(
+                    product.getStock() + orderItem.getQuantity()
+            );
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
     }
 }
