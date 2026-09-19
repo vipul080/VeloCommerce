@@ -1,6 +1,7 @@
 package com.vipul.ecommerce.controller;
 
 import com.vipul.ecommerce.dto.OrderResponse;
+import com.vipul.ecommerce.dto.UpdateOrderStatusRequest;
 import com.vipul.ecommerce.entity.User;
 import com.vipul.ecommerce.service.OrderService;
 import org.springframework.http.ResponseEntity;
@@ -54,5 +55,21 @@ public class OrderController {
         orderService.cancelOrder(orderId, user.getEmail());
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<List<OrderResponse>> getAllOrders() {
+
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
+
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<OrderResponse> updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestBody UpdateOrderStatusRequest request) {
+
+        return ResponseEntity.ok(
+                orderService.updateOrderStatus(orderId, request)
+        );
     }
 }

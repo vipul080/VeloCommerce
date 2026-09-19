@@ -1,6 +1,7 @@
 package com.vipul.ecommerce.service;
 
 import com.vipul.ecommerce.dto.OrderResponse;
+import com.vipul.ecommerce.dto.UpdateOrderStatusRequest;
 import com.vipul.ecommerce.entity.*;
 import com.vipul.ecommerce.exception.*;
 import com.vipul.ecommerce.repository.*;
@@ -629,5 +630,221 @@ class OrderServiceTest {
         assertEquals(OrderStatus.SHIPPED, order.getStatus());
 
         verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void getAllOrdersReturnsAllOrders() {
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@example.com");
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Mechanical Keyboard");
+
+        Order order1 = new Order(
+                user,
+                OrderStatus.CONFIRMED,
+                new BigDecimal("2999.99"),
+                LocalDateTime.now()
+        );
+
+        OrderItem item1 = new OrderItem(
+                order1,
+                product,
+                1,
+                new BigDecimal("2999.99")
+        );
+
+        order1.getItems().add(item1);
+
+        Order order2 = new Order(
+                user,
+                OrderStatus.CANCELLED,
+                new BigDecimal("5999.98"),
+                LocalDateTime.now()
+        );
+
+        OrderItem item2 = new OrderItem(
+                order2,
+                product,
+                2,
+                new BigDecimal("2999.99")
+        );
+
+        order2.getItems().add(item2);
+
+        when(orderRepository.findAll())
+                .thenReturn(List.of(order1, order2));
+
+        List<OrderResponse> result = orderService.getAllOrders();
+
+        assertEquals(2, result.size());
+
+        assertEquals(OrderStatus.CONFIRMED,
+                result.get(0).getStatus());
+
+        assertEquals(OrderStatus.CANCELLED,
+                result.get(1).getStatus());
+
+        assertEquals(1, result.get(0).getItems().size());
+        assertEquals(1, result.get(1).getItems().size());
+
+        verify(orderRepository).findAll();
+    }
+
+    @Test
+    void updateOrderStatusSuccessfully() {
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@example.com");
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Mechanical Keyboard");
+
+        Order order = new Order(
+                user,
+                OrderStatus.CONFIRMED,
+                new BigDecimal("2999.99"),
+                LocalDateTime.now()
+        );
+
+        OrderItem item = new OrderItem(
+                order,
+                product,
+                1,
+                new BigDecimal("2999.99")
+        );
+
+        order.getItems().add(item);
+
+        UpdateOrderStatusRequest request =
+                new UpdateOrderStatusRequest(OrderStatus.SHIPPED);
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        when(orderRepository.save(order))
+                .thenReturn(order);
+
+        OrderResponse result =
+                orderService.updateOrderStatus(1L, request);
+
+        assertEquals(OrderStatus.SHIPPED, result.getStatus());
+        assertEquals(new BigDecimal("2999.99"), result.getTotalAmount());
+        assertEquals(1, result.getItems().size());
+
+        verify(orderRepository).findById(1L);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void updateOrderStatusThrowsExceptionWhenOrderNotFound() {
+
+        UpdateOrderStatusRequest request =
+                new UpdateOrderStatusRequest(OrderStatus.SHIPPED);
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                OrderNotFoundException.class,
+                () -> orderService.updateOrderStatus(1L, request)
+        );
+
+        verify(orderRepository).findById(1L);
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void updateOrderStatusAllowsValidTransition() {
+
+        User user = new User();
+        user.setId(1L);
+
+        Order order = new Order(
+                user,
+                OrderStatus.SHIPPED,
+                new BigDecimal("2999.99"),
+                LocalDateTime.now()
+        );
+
+        UpdateOrderStatusRequest request =
+                new UpdateOrderStatusRequest(OrderStatus.DELIVERED);
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        when(orderRepository.save(order))
+                .thenReturn(order);
+
+        OrderResponse result =
+                orderService.updateOrderStatus(1L, request);
+
+        assertEquals(OrderStatus.DELIVERED, result.getStatus());
+
+        verify(orderRepository).findById(1L);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void updateOrderStatusRejectsInvalidTransition() {
+
+        User user = new User();
+        user.setId(1L);
+
+        Order order = new Order(
+                user,
+                OrderStatus.DELIVERED,
+                new BigDecimal("2999.99"),
+                LocalDateTime.now()
+        );
+
+        UpdateOrderStatusRequest request =
+                new UpdateOrderStatusRequest(OrderStatus.SHIPPED);
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        assertThrows(
+                InvalidOrderStatusTransitionException.class,
+                () -> orderService.updateOrderStatus(1L, request)
+        );
+
+        verify(orderRepository).findById(1L);
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void updateOrderStatusAllowsCancellationFromConfirmed() {
+
+        User user = new User();
+        user.setId(1L);
+
+        Order order = new Order(
+                user,
+                OrderStatus.CONFIRMED,
+                new BigDecimal("2999.99"),
+                LocalDateTime.now()
+        );
+
+        UpdateOrderStatusRequest request =
+                new UpdateOrderStatusRequest(OrderStatus.CANCELLED);
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        when(orderRepository.save(order))
+                .thenReturn(order);
+
+        OrderResponse result =
+                orderService.updateOrderStatus(1L, request);
+
+        assertEquals(OrderStatus.CANCELLED, result.getStatus());
+
+        verify(orderRepository).save(order);
     }
 }

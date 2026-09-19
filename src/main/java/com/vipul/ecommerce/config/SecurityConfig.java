@@ -3,6 +3,7 @@ package com.vipul.ecommerce.config;
 import com.vipul.ecommerce.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -51,6 +52,16 @@ public class SecurityConfig {
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.DELETE,
                                 "/api/products/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/orders/admin"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/orders/*/status"
                         ).hasRole("ADMIN")
 
                         .anyRequest().authenticated()

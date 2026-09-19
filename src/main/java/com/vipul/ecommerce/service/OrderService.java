@@ -2,6 +2,7 @@ package com.vipul.ecommerce.service;
 
 import com.vipul.ecommerce.dto.OrderItemResponse;
 import com.vipul.ecommerce.dto.OrderResponse;
+import com.vipul.ecommerce.dto.UpdateOrderStatusRequest;
 import com.vipul.ecommerce.entity.*;
 import com.vipul.ecommerce.exception.*;
 import com.vipul.ecommerce.repository.*;
@@ -192,5 +193,51 @@ public class OrderService {
         order.setStatus(OrderStatus.CANCELLED);
 
         orderRepository.save(order);
+    }
+
+    public List<OrderResponse> getAllOrders() {
+
+        List<Order> orders = orderRepository.findAll();
+
+        return orders.stream()
+                .map(this::convertToResponse)
+                .toList();
+    }
+
+    public OrderResponse updateOrderStatus(
+            Long orderId,
+            UpdateOrderStatusRequest request) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new OrderNotFoundException("Order not found"));
+
+        OrderStatus currentStatus = order.getStatus();
+        OrderStatus newStatus = request.getStatus();
+
+        boolean validTransition =
+                (currentStatus == OrderStatus.PENDING &&
+                        (newStatus == OrderStatus.CONFIRMED ||
+                                newStatus == OrderStatus.CANCELLED))
+                        ||
+                        (currentStatus == OrderStatus.CONFIRMED &&
+                                (newStatus == OrderStatus.SHIPPED ||
+                                        newStatus == OrderStatus.CANCELLED))
+                        ||
+                        (currentStatus == OrderStatus.SHIPPED &&
+                                newStatus == OrderStatus.DELIVERED);
+
+        if (!validTransition) {
+            throw new InvalidOrderStatusTransitionException(
+                    "Invalid order status transition from "
+                            + currentStatus + " to " + newStatus
+            );
+        }
+
+        order.setStatus(newStatus);
+
+        Order updatedOrder = orderRepository.save(order);
+
+        return convertToResponse(updatedOrder);
     }
 }
