@@ -6,8 +6,10 @@ import com.vipul.ecommerce.dto.ProductResponse;
 import com.vipul.ecommerce.entity.Product;
 import com.vipul.ecommerce.exception.ProductNotFoundException;
 import com.vipul.ecommerce.repository.ProductRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -83,6 +85,7 @@ public class ProductService {
         );
     }
 
+    @Cacheable(value = "products", key = "#id")
     public ProductResponse getProductById(Long id) {
 
         Product product = productRepository.findById(id)
@@ -100,6 +103,7 @@ public class ProductService {
         );
     }
 
+    @CacheEvict(value = "products", key = "#id")
     public ProductResponse updateProduct(Long id, ProductRequest request) {
 
         Product product = productRepository.findById(id)
@@ -126,6 +130,7 @@ public class ProductService {
         );
     }
 
+    @CacheEvict(value = "products", key = "#id")
     public void deleteProduct(Long id) {
 
         Product product = productRepository.findById(id)
