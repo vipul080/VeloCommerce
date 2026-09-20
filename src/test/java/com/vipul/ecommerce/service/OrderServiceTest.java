@@ -42,6 +42,9 @@ class OrderServiceTest {
     @InjectMocks
     private OrderService orderService;
 
+    @Mock
+    private OrderNotificationService orderNotificationService;
+
     @Test
     void placeOrder_shouldCreateOrder_whenCartHasItemsAndStockIsAvailable() {
 

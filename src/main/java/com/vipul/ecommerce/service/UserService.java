@@ -1,7 +1,6 @@
 package com.vipul.ecommerce.service;
 
 import com.vipul.ecommerce.dto.LoginRequest;
-import com.vipul.ecommerce.dto.LoginResponse;
 import com.vipul.ecommerce.dto.RegisterRequest;
 import com.vipul.ecommerce.entity.Role;
 import com.vipul.ecommerce.entity.User;

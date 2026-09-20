@@ -64,6 +64,12 @@ public class SecurityConfig {
                                 "/api/orders/*/status"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
