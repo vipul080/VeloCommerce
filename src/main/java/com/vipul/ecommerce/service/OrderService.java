@@ -21,16 +21,18 @@ public class OrderService {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
+    private final OrderNotificationService orderNotificationService;
 
     public OrderService(
             OrderRepository orderRepository, OrderItemRepository orderItemRepository,
-            UserRepository userRepository, CartRepository cartRepository, CartItemRepository cartItemRepository) {
+            UserRepository userRepository, CartRepository cartRepository, CartItemRepository cartItemRepository, OrderNotificationService orderNotificationService) {
 
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
+        this.orderNotificationService = orderNotificationService;
     }
 
     public List<OrderResponse> getMyOrders(String email) {
@@ -154,6 +156,11 @@ public class OrderService {
         cartRepository.save(cart);
 
         //throw new RuntimeException("Testing transaction rollback");
+
+        orderNotificationService.sendOrderConfirmation(
+                savedOrder.getId(),
+                user.getEmail()
+        );
 
         return convertToResponse(savedOrder);
     }
