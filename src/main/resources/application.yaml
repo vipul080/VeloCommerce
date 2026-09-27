@@ -21,7 +21,7 @@ spring:
       port: ${REDIS_PORT:6379}
 
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 jwt:
   secret: ${JWT_SECRET}
